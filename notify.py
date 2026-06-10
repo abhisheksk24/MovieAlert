@@ -86,12 +86,11 @@ def get_show_times() -> set[str]:
     raise RuntimeError(f"showtimes array for {VENUE_CODE!r} not found")
 
 
-def send_whatsapp_group(id_instance: str, api_token: str, chat_id: str, text: str) -> None:
+def send_whatsapp_group(
+    id_instance: str, api_token: str, chat_id: str, text: str, api_url: str
+) -> None:
     """Send a message to a WhatsApp group via Green API (stdlib only)."""
-    url = (
-        f"https://api.green-api.com/waInstance{id_instance}"
-        f"/sendMessage/{api_token}"
-    )
+    url = f"{api_url.rstrip('/')}/waInstance{id_instance}/sendMessage/{api_token}"
     payload = json.dumps({"chatId": chat_id, "message": text}).encode()
     req = urllib.request.Request(
         url, data=payload, headers={"Content-Type": "application/json"}
@@ -105,11 +104,12 @@ def main() -> None:
     instance = os.environ.get("GREEN_API_INSTANCE", "")
     token = os.environ.get("GREEN_API_TOKEN", "")
     chat_id = os.environ.get("GREEN_API_CHAT_ID", "")
+    api_url = os.environ.get("GREEN_API_URL", "")
 
-    if not all([instance, token, chat_id]):
+    if not all([instance, token, chat_id, api_url]):
         print(
-            "ERROR: Set GREEN_API_INSTANCE, GREEN_API_TOKEN, and GREEN_API_CHAT_ID "
-            "environment variables (or GitHub Secrets)."
+            "ERROR: Set GREEN_API_INSTANCE, GREEN_API_TOKEN, GREEN_API_CHAT_ID, "
+            "and GREEN_API_URL environment variables (or GitHub Secrets)."
         )
         sys.exit(1)
 
@@ -140,7 +140,7 @@ def main() -> None:
 
     print(f"Sending WhatsApp notification for new shows: {new_sorted}")
     try:
-        send_whatsapp_group(instance, token, chat_id, message)
+        send_whatsapp_group(instance, token, chat_id, message, api_url)
         print("WhatsApp message sent successfully.")
     except Exception as exc:
         print(f"ERROR sending WhatsApp message: {exc}")
