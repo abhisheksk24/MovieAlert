@@ -2,7 +2,7 @@ name: BMS Show Monitor
 
 on:
   schedule:
-    - cron: '*/5 * * * *'  # every 5 minutes
+    - cron: '0 * * * *'    # every hour (keeps within ScraperAPI free tier)
   workflow_dispatch:         # allows manual trigger from the Actions tab
 
 jobs:
@@ -26,3 +26,4 @@ jobs:
           GREEN_API_TOKEN: ${{ secrets.GREEN_API_TOKEN }}
           GREEN_API_CHAT_ID: ${{ secrets.GREEN_API_CHAT_ID }}
           GREEN_API_URL: ${{ secrets.GREEN_API_URL }}
+          SCRAPER_API_KEY: ${{ secrets.SCRAPER_API_KEY }}

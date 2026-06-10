@@ -49,10 +49,24 @@ def _normalize_time(raw: str) -> str:
 
 
 def get_show_times() -> set[str]:
-    """Fetch the BMS page and return show-time strings for VENUE_CODE."""
-    resp = _SESSION.get(URL, impersonate="chrome124", timeout=20)
-    resp.raise_for_status()
-    html = resp.text
+    """Fetch the BMS page and return show-time strings for VENUE_CODE.
+
+    In cloud (GitHub Actions): routes through ScraperAPI to bypass Cloudflare's
+    data-center IP block. Locally: falls back to curl_cffi residential spoofing.
+    """
+    scraper_key = os.environ.get("SCRAPER_API_KEY", "")
+    if scraper_key:
+        api_url = (
+            f"https://api.scraperapi.com"
+            f"?api_key={scraper_key}&url={urllib.parse.quote(URL, safe='')}"
+        )
+        req = urllib.request.Request(api_url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=30) as r:
+            html = r.read().decode("utf-8")
+    else:
+        resp = _SESSION.get(URL, impersonate="chrome124", timeout=20)
+        resp.raise_for_status()
+        html = resp.text
 
     marker_pos = html.find(_INITIAL_STATE_MARKER)
     if marker_pos < 0:
